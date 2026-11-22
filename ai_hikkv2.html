@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0e27">
+<title>HIKK AI</title>
+<style>
+:root{--bg:#0a0e27;--bg2:#131838;--card:#1a2144;--card2:#232b52;--accent:#6366f1;--accent2:#8b5cf6;--text:#e2e8f0;--muted:#94a3b8;--border:#2a3358;--success:#10b981;--warning:#f59e0b;--danger:#ef4444}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);font-size:15px;-webkit-user-select:none;user-select:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+.screen{display:none;height:100vh;height:100dvh;flex-direction:column}
+.screen.active{display:flex}
+#loginScreen{background:radial-gradient(ellipse at top,#1e1b4b 0%,#0a0e27 60%);justify-content:center;align-items:center;padding:24px;overflow-y:auto}
+.login-box{width:100%;max-width:380px;padding:8px 0}
+.logo{text-align:center;margin-bottom:8px}
+.logo h1{font-size:56px;font-weight:900;letter-spacing:-2px;background:linear-gradient(135deg,#6366f1,#8b5cf6,#ec4899);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.logo p{color:var(--muted);font-size:13px;margin-top:4px}
+.login-title{text-align:center;font-size:20px;font-weight:700;margin:24px 0 20px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.field input{width:100%;padding:13px 16px;background:var(--card);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:15px;outline:none}
+.field input:focus{border-color:var(--accent)}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.btn:active{opacity:.85}.btn:disabled{opacity:.5;cursor:not-allowed}
+.switch-auth{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.switch-auth a{color:var(--accent);font-weight:600;text-decoration:none;cursor:pointer}
+.error-msg{color:var(--danger);font-size:13px;margin-top:10px;text-align:center;min-height:18px}
+#appScreen{background:var(--bg)}
+.header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0}
+.header h2{font-size:20px;font-weight:800;background:linear-gradient(135deg,#6366f1,#8b5cf6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.header-right{display:flex;align-items:center;gap:8px}
+.role-badge{padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.role-badge.member{background:rgba(99,102,241,.2);color:#818cf8}
+.role-badge.vip{background:rgba(245,158,11,.2);color:#fbbf24}
+.role-badge.developer{background:rgba(239,68,68,.2);color:#f87171}
+.token-pill{font-size:12px;padding:5px 10px;border-radius:20px;background:var(--card);color:var(--muted);font-weight:600}
+.token-pill.low{color:var(--warning)}.token-pill.zero{color:var(--danger)}
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.tab{display:none;flex:1;overflow:hidden;flex-direction:column}
+.tab.active{display:flex}
+#chatMessages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+#chatMessages::-webkit-scrollbar{width:4px}
+#chatMessages::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.msg{display:flex;gap:8px;max-width:100%;animation:fadeIn .3s}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{flex-direction:row-reverse}
+.msg-avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.msg.user .msg-avatar{background:var(--accent);color:#fff}
+.msg.ai .msg-avatar{background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff}
+.msg-bubble{padding:10px 14px;border-radius:16px;max-width:82%;font-size:14.5px;line-height:1.55;word-wrap:break-word;overflow-wrap:break-word}
+.msg.user .msg-bubble{background:var(--accent);color:#fff;border-bottom-right-radius:4px;white-space:pre-wrap}
+.msg.ai .msg-bubble{background:var(--card);color:var(--text);border-bottom-left-radius:4px;border:1px solid var(--border)}
+.msg-bubble pre{background:#0d1117;padding:10px;border-radius:8px;overflow-x:auto;margin:0;font-size:12.5px;font-family:'Courier New',monospace;line-height:1.5}
+.msg-bubble code{background:rgba(255,255,255,.08);padding:1px 5px;border-radius:4px;font-size:13px;font-family:'Courier New',monospace}
+.msg-bubble pre code{background:none;padding:0}
+/* CODE BLOCK */
+.code-block-wrapper{margin:8px 0;border-radius:10px;overflow:hidden;border:1px solid #2a3358;background:#0d1117}
+.code-block-header{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#161b22;border-bottom:1px solid #2a3358;font-size:11px;color:#8b949e;font-weight:600;text-transform:uppercase}
+.copy-btn{padding:4px 10px;background:rgba(99,102,241,.15);color:#a5b4fc;border:1px solid rgba(99,102,241,.3);border-radius:6px;font-size:11px;font-weight:600;cursor:pointer;text-transform:none}
+.copy-btn:active{background:rgba(99,102,241,.3)}
+.copy-btn.copied{background:rgba(16,185,129,.2);color:#34d399;border-color:rgba(16,185,129,.4)}
+/* ATTACHMENTS IN MESSAGE */
+.msg-attachments{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.msg-attachments:empty{display:none}
+.msg-img{max-width:200px;max-height:200px;border-radius:8px;cursor:pointer;border:1px solid rgba(255,255,255,.2)}
+.msg-file{display:flex;align-items:center;gap:6px;padding:6px 10px;background:rgba(255,255,255,.15);border-radius:8px;font-size:12px;font-weight:600;max-width:100%}
+.msg-file .file-icon{font-size:16px}
+.msg-file .file-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px}
+/* TYPING */
+.typing{display:inline-flex;gap:4px}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:bounce 1.4s infinite}
+.typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{opacity:.3;transform:translateY(0)}30%{opacity:1;transform:translateY(-4px)}}
+/* INPUT AREA */
+.chat-input-area{padding:10px 14px;background:var(--bg2);border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.pending-attachments{display:none;flex-wrap:wrap;gap:6px;padding:6px 0}
+.pending-attachments.show{display:flex}
+.pending-chip{position:relative;display:flex;align-items:center;gap:6px;padding:6px 26px 6px 8px;background:var(--card);border:1px solid var(--border);border-radius:8px;font-size:12px;max-width:180px}
+.pending-chip img{width:24px;height:24px;object-fit:cover;border-radius:4px}
+.pending-chip .file-icon{font-size:16px}
+.pending-chip .chip-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;font-weight:600}
+.pending-chip .remove-btn{position:absolute;top:2px;right:4px;background:rgba(239,68,68,.8);color:#fff;border:none;width:16px;height:16px;border-radius:50%;font-size:10px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.input-row{display:flex;gap:6px;align-items:flex-end}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--border);background:var(--card);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.icon-btn:active{background:var(--card2)}
+#chatInput{flex:1;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:20px;color:var(--text);font-size:14.5px;font-family:inherit;resize:none;max-height:120px;min-height:44px;outline:none}
+#chatInput:focus{border-color:var(--accent)}
+.send-btn{width:44px;height:44px;border-radius:50%;border:none;flex-shrink:0;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
+.send-btn:disabled{opacity:.4}
+/* IMAGE TAB */
+#imageTab{padding:16px;overflow-y:auto;gap:14px}
+.image-input-area{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.image-input-area label{font-size:12px;color:var(--muted);font-weight:600}
+#imagePrompt{width:100%;padding:12px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;resize:none;outline:none;min-height:80px}
+#imagePrompt:focus{border-color:var(--accent)}
+.gallery{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.gallery-item{position:relative;border-radius:12px;overflow:hidden;aspect-ratio:1;background:var(--card);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.gallery-item img{width:100%;height:100%;object-fit:cover}
+.loading-spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* PROFILE */
+#profileTab{padding:16px 16px 32px;overflow-y:auto;gap:14px;-webkit-overflow-scrolling:touch}
+#profileTab>*{flex-shrink:0}
+#aiCfgCard summary{font-size:13px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;list-style:none}
+#aiCfgCard[open] summary{margin-bottom:12px}
+.profile-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center}
+.profile-avatar{width:72px;height:72px;border-radius:50%;margin:0 auto 12px;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff}
+.profile-name{font-size:20px;font-weight:700}
+.profile-role{margin-top:8px}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px}
+.info-card h3{font-size:13px;color:var(--muted);margin-bottom:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.info-row{display:flex;justify-content:space-between;padding:8px 0;font-size:14px}
+.info-row+.info-row{border-top:1px solid var(--border)}
+.info-row .val{font-weight:700}
+.btn-secondary{width:100%;padding:13px;border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);font-size:14px;font-weight:600;cursor:pointer;margin-top:4px}
+.btn-danger{color:var(--danger);border-color:rgba(239,68,68,.3)}
+.admin-card{border-color:rgba(239,68,68,.3)}
+.admin-user-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;gap:8px}
+.admin-user-row:last-child{border-bottom:none}
+.admin-user-info{flex:1;min-width:0}
+.admin-user-info .uname{font-weight:700;word-break:break-all}
+.admin-user-info .urole{font-size:11px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.admin-select{padding:6px 8px;background:var(--bg2);color:var(--text);border:1px solid var(--border);border-radius:8px;font-size:12px;flex-shrink:0}
+/* NAV */
+.bottom-nav{display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0}
+.nav-btn{flex:1;padding:12px 8px;background:none;border:none;color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;font-weight:600}
+.nav-btn.active{color:var(--accent)}
+.nav-btn .nav-icon{font-size:20px;line-height:1}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card2);color:var(--text);padding:10px 18px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;pointer-events:none;transition:all .3s;z-index:999;border:1px solid var(--border);max-width:85vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* LIGHTBOX */
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px;cursor:pointer}
+.lightbox.show{display:flex}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen active">
+  <div class="login-box">
+    <div class="logo"><h1>HIKK</h1><p>AI Assistant Lokal</p></div>
+    <div class="login-title" id="authTitle">Masuk ke Akun</div>
+    <div id="loginFields">
+      <div class="field"><label>Username</label><input type="text" id="loginUser" placeholder="Masukkan username" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="loginPass" placeholder="Masukkan password" autocomplete="current-password"></div>
+    </div>
+    <div id="registerFields" style="display:none">
+      <div class="field"><label>Username Baru</label><input type="text" id="regUser" placeholder="Pilih username" autocomplete="username"></div>
+      <div class="field"><label>Password</label><input type="password" id="regPass" placeholder="Minimal 6 karakter" autocomplete="new-password"></div>
+      <div class="field"><label>Konfirmasi Password</label><input type="password" id="regPass2" placeholder="Ulangi password" autocomplete="new-password"></div>
+    </div>
+    <div class="error-msg" id="authError"></div>
+    <button class="btn" id="authBtn" onclick="handleAuth()">Masuk</button>
+    <div class="switch-auth"><span id="switchText">Belum punya akun?</span> <a onclick="toggleAuthMode()" id="switchLink">Daftar</a></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appScreen" class="screen">
+  <div class="header">
+    <h2>HIKK AI</h2>
+    <div class="header-right">
+      <div class="token-pill" id="tokenPill">∞</div>
+      <div class="role-badge member" id="roleBadge">Member</div>
+    </div>
+  </div>
+  <div class="content">
+    <!-- CHAT -->
+    <div class="tab active" id="chatTab">
+      <div id="chatMessages"></div>
+      <div class="chat-input-area">
+        <div class="pending-attachments" id="pendingAttachments"></div>
+        <div class="input-row">
+          <button class="icon-btn" onclick="document.getElementById('fileInput').click()" title="Kirim file">📎</button>
+          <button class="icon-btn" onclick="document.getElementById('imageInput').click()" title="Kirim gambar">🖼️</button>
+          <textarea id="chatInput" placeholder="Tanya apa saja ke HIKK..." rows="1" oninput="autoGrow(this)"></textarea>
+          <button class="send-btn" id="sendBtn" onclick="sendChat()">➤</button>
+        </div>
+        <input type="file" id="fileInput" style="display:none" onchange="handleFileSelect(event)" multiple>
+        <input type="file" id="imageInput" style="display:none" accept="image/*" onchange="handleFileSelect(event)" multiple>
+      </div>
+    </div>
+    <!-- IMAGE -->
+    <div class="tab" id="imageTab">
+      <div class="image-input-area">
+        <label>🎨 Buat Gambar dari Prompt</label>
+        <textarea id="imagePrompt" placeholder="Contoh: kucing astronot di bulan, gaya sinematik, ultra detail"></textarea>
+        <button class="btn" id="genImgBtn" onclick="generateImage()">✨ Generate Gambar</button>
+      </div>
+      <div class="gallery" id="gallery"></div>
+    </div>
+    <!-- PROFILE -->
+    <div class="tab" id="profileTab">
+      <div class="profile-card">
+        <div class="profile-avatar" id="profAvatar">H</div>
+        <div class="profile-name" id="profName">-</div>
+        <div class="profile-role"><span class="role-badge member" id="profRole">Member</span></div>
+      </div>
+      <div class="info-card">
+        <h3>📊 Statistik Token</h3>
+        <div class="info-row"><span>Token Terpakai</span><span class="val" id="statUsed">0</span></div>
+        <div class="info-row"><span>Token Tersisa</span><span class="val" id="statLeft">-</span></div>
+        <div class="info-row"><span>Batas Harian</span><span class="val" id="statLimit">-</span></div>
+        <div class="info-row"><span>Reset</span><span class="val">Tengah malam</span></div>
+      </div>
+      <button class="btn-secondary" onclick="clearChat()">🗑️ Hapus Riwayat Chat</button>
+      <button class="btn-secondary btn-danger" onclick="logout()">🚪 Keluar</button>
+      <div class="info-card admin-card" id="adminCard" style="display:none">
+        <h3>👑 Panel Developer</h3>
+        <div id="adminUsers"></div>
+      </div>
+      <details class="info-card admin-card" id="aiCfgCard" style="display:none">
+        <summary>🔌 Koneksi AI (Developer)</summary>
+        <div class="info-row"><span>API key di server</span><span class="val" id="cfgServer">...</span></div>
+        <div class="info-row"><span>Mesin terakhir</span><span class="val" id="cfgStatus">-</span></div>
+        <div class="field" style="margin-top:12px"><label>Mode</label>
+          <select id="cfgMode" class="admin-select" style="width:100%;padding:12px;font-size:14px">
+            <option value="auto">Otomatis (Claude, lalu gratis)</option>
+            <option value="claude">Claude saja</option>
+            <option value="free">Gratis saja</option>
+          </select>
+        </div>
+        <div class="field"><label>Anthropic API Key (dipakai SEMUA pengguna)</label><input type="password" id="cfgKey" placeholder="sk-ant-... (kosongkan jika tidak diganti)" autocomplete="off"></div>
+        <div class="field"><label>Model Claude</label><input type="text" id="cfgModel" placeholder="claude-sonnet-5-5" autocomplete="off"></div>
+        <div class="field"><label>Password admin server (= ADMIN_PASSWORD di Netlify)</label><input type="password" id="cfgAdminPass" placeholder="Wajib untuk menyimpan ke server" autocomplete="off"></div>
+        <button class="btn-secondary" onclick="saveAICfg()">💾 Simpan</button>
+        <button class="btn-secondary" onclick="testAI()">🧪 Tes Koneksi</button>
+      </details>
+      <div style="text-align:center;color:var(--muted);font-size:11px;margin-top:6px;">HIKK AI v2.0 · Made with ❤️ by Hikmal</div>
+    </div>
+  </div>
+  <div class="bottom-nav">
+    <button class="nav-btn active" id="navChat" onclick="switchTab('chat')"><span class="nav-icon">💬</span><span>Chat</span></button>
+    <button class="nav-btn" id="navImage" onclick="switchTab('image')"><span class="nav-icon">🎨</span><span>Gambar</span></button>
+    <button class="nav-btn" id="navProfile" onclick="switchTab('profile')"><span class="nav-icon">👤</span><span>Profil</span></button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()"><img id="lightboxImg" src="" alt=""></div>
+
+<script>
+// ====== KONFIG ======
+const DEV_USER = "Hikmal";
+const DEV_PASS = "05210611";
+const ROLE_LIMITS = { member: 20, vip: 200, developer: Infinity };
+const ROLE_LABEL = { member: "Member", vip: "VIP", developer: "Developer" };
+const TEXT_EXT = ['txt','md','json','js','ts','jsx','tsx','py','java','c','cpp','h','cs','go','rs','rb','php','html','css','scss','xml','yaml','yml','csv','log','sh','bat','sql','dart','kt','swift','r','lua','ini','conf','env','gitignore','toml'];
+const MAX_IMG_SIZE = 2*1024*1024;
+const MAX_FILE_SIZE = 1024*1024;
+
+let currentUser = null;
+let chatHistory = [];
+let isAuthRegisterMode = false;
+let isSending = false;
+let pendingAttachments = []; // {type:'image'|'file', name, dataUrl, textContent, size, isText}
+
+// ====== STORAGE ======
+function getUsers(){ try{return JSON.parse(localStorage.getItem('hikk_users')||'{}')}catch(e){return{}} }
+function saveUsers(u){ localStorage.setItem('hikk_users', JSON.stringify(u)) }
+function todayKey(){ const d=new Date(); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate() }
+function ensureUserRecord(name){
+  const users = getUsers(); if(!users[name]) return null;
+  const u = users[name];
+  if(u.lastReset !== todayKey()){ u.tokensUsed=0; u.lastReset=todayKey(); users[name]=u; saveUsers(users) }
+  return u;
+}
+
+// ====== AUTH ======
+function toggleAuthMode(){
+  isAuthRegisterMode = !isAuthRegisterMode;
+  document.getElementById('loginFields').style.display = isAuthRegisterMode?'none':'block';
+  document.getElementById('registerFields').style.display = isAuthRegisterMode?'block':'none';
+  document.getElementById('authTitle').textContent = isAuthRegisterMode?'Buat Akun Baru':'Masuk ke Akun';
+  document.getElementById('authBtn').textContent = isAuthRegisterMode?'Daftar':'Masuk';
+  document.getElementById('switchText').textContent = isAuthRegisterMode?'Sudah punya akun?':'Belum punya akun?';
+  document.getElementById('switchLink').textContent = isAuthRegisterMode?'Masuk':'Daftar';
+  document.getElementById('authError').textContent = '';
+}
+function showAuthError(m){ document.getElementById('authError').textContent = m }
+function handleAuth(){ isAuthRegisterMode ? doRegister() : doLogin() }
+
+function doLogin(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  if(!u||!p) return showAuthError('Isi semua field!');
+  if(u===DEV_USER && p===DEV_PASS) return loginSuccess({username:u, role:'developer'});
+  const users = getUsers();
+  if(!users[u]) return showAuthError('Akun tidak ditemukan');
+  if(users[u].password!==p) return showAuthError('Password salah');
+  loginSuccess({username:u, role:users[u].role||'member'});
+}
+function doRegister(){
+  const u = document.getElementById('regUser').value.trim();
+  const p = document.getElementById('regPass').value;
+  const p2 = document.getElementById('regPass2').value;
+  if(!u||!p||!p2) return showAuthError('Isi semua field!');
+  if(u.length<3) return showAuthError('Username minimal 3 karakter');
+  if(p.length<6) return showAuthError('Password minimal 6 karakter');
+  if(p!==p2) return showAuthError('Password tidak cocok');
+  if(u===DEV_USER) return showAuthError('Username ini sudah dipakai');
+  const users = getUsers();
+  if(users[u]) return showAuthError('Username sudah terdaftar');
+  users[u] = { password:p, role:'member', tokensUsed:0, lastReset:todayKey(), createdAt:Date.now() };
+  saveUsers(users);
+  showToast('✅ Akun berhasil dibuat!');
+  loginSuccess({username:u, role:'member'});
+}
+function loginSuccess(userObj){
+  currentUser = userObj;
+  if(userObj.role!=='developer') ensureUserRecord(userObj.username);
+  localStorage.setItem('hikk_session', JSON.stringify(userObj));
+  startApp();
+}
+function logout(){
+  if(!confirm('Keluar dari HIKK AI?')) return;
+  localStorage.removeItem('hikk_session');
+  currentUser=null; chatHistory=[]; pendingAttachments=[];
+  document.getElementById('appScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+  document.getElementById('loginUser').value='';
+  document.getElementById('loginPass').value='';
+}
+
+// ====== START APP ======
+function startApp(){
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('appScreen').classList.add('active');
+  refreshUI();
+  if(currentUser.role==='developer') loadAICfgFields();
+  if(chatHistory.length===0){
+    addAIMessage("Halo! Aku **HIKK AI**, siap bantu kamu coding, jawab pertanyaan, bikin gambar, dan banyak lagi. 🚀\n\n✨ Kamu bisa:\n- 📎 Kirim **file kode** untuk aku review/edit\n- 🖼️ Kirim **gambar** untuk aku analisis\n- 📋 **Salin** blok kode dengan tombol di kodeku\n\nAda yang bisa aku bantu?");
+  }
+}
+function refreshUI(){
+  if(!currentUser) return;
+  const role = currentUser.role;
+  const limits = ROLE_LIMITS[role];
+  document.getElementById('roleBadge').textContent = ROLE_LABEL[role];
+  document.getElementById('roleBadge').className = 'role-badge '+role;
+  const pill = document.getElementById('tokenPill');
+  if(role==='developer'){ pill.textContent = '∞ UNLIMITED'; pill.className = 'token-pill'; }
+  else {
+    const rec = ensureUserRecord(currentUser.username);
+    const used = rec ? rec.tokensUsed : 0;
+    const left = Math.max(0, limits-used);
+    pill.textContent = '🪙 '+left+'/'+limits;
+    pill.className = 'token-pill'+(left===0?' zero':(left<limits*0.2?' low':''));
+  }
+  document.getElementById('profAvatar').textContent = currentUser.username[0].toUpperCase();
+  document.getElementById('profName').textContent = currentUser.username;
+  const pr = document.getElementById('profRole');
+  pr.textContent = ROLE_LABEL[role]; pr.className = 'role-badge '+role;
+  const rec = ensureUserRecord(currentUser.username);
+  const used = rec ? rec.tokensUsed : 0;
+  document.getElementById('statUsed').textContent = used;
+  document.getElementById('statLeft').textContent = role==='developer'?'∞':Math.max(0, limits-used);
+  document.getElementById('statLimit').textContent = role==='developer'?'Unlimited':limits;
+  const ac = document.getElementById('adminCard');
+  if(role==='developer'){ ac.style.display='block'; renderAdminPanel(); }
+  else { ac.style.display='none'; }
+  document.getElementById('aiCfgCard').style.display = role==='developer' ? 'block' : 'none';
+}
+
+// ====== ADMIN ======
+function renderAdminPanel(){
+  const users = getUsers();
+  const c = document.getElementById('adminUsers');
+  const entries = Object.entries(users);
+  if(entries.length===0){ c.innerHTML='<div style="color:var(--muted);font-size:12px;padding:8px 0">Belum ada user terdaftar</div>'; return; }
+  c.innerHTML = entries.map(([name,u])=>`
+    <div class="admin-user-row">
+      <div class="admin-user-info">
+        <div class="uname">${escapeHtml(name)}</div>
+        <div class="urole">${u.role||'member'} · ${u.tokensUsed||0} token</div>
+      </div>
+      <select class="admin-select" data-user="${escapeHtml(name)}">
+        <option value="member" ${u.role==='member'?'selected':''}>Member</option>
+        <option value="vip" ${u.role==='vip'?'selected':''}>VIP</option>
+        <option value="developer" ${u.role==='developer'?'selected':''}>Developer</option>
+      </select>
+    </div>`).join('');
+  c.querySelectorAll('.admin-select').forEach(sel=>{
+    sel.addEventListener('change', e=>{
+      const uname = e.target.getAttribute('data-user');
+      const newRole = e.target.value;
+      const users = getUsers();
+      if(!users[uname]) return;
+      users[uname].role = newRole;
+      saveUsers(users);
+      showToast('✅ Role '+uname+' → '+ROLE_LABEL[newRole]);
+      renderAdminPanel();
+    });
+  });
+}
+
+// ====== TAB NAV ======
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(tab+'Tab').classList.add('active');
+  document.getElementById('nav'+tab[0].toUpperCase()+tab.slice(1)).classList.add('active');
+}
+
+// ====== ATTACHMENTS ======
+function handleFileSelect(e){
+  const files = Array.from(e.target.files);
+  files.forEach(file=>{
+    const isImage = file.type.startsWith('image/');
+    if(isImage && file.size > MAX_IMG_SIZE){ showToast('❌ Gambar terlalu besar (maks 2MB)'); return; }
+    if(!isImage && file.size > MAX_FILE_SIZE){ showToast('❌ File terlalu besar (maks 1MB)'); return; }
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isText = TEXT_EXT.includes(ext) || file.type.startsWith('text/') || ['application/json','application/xml','application/javascript'].includes(file.type);
+    const reader = new FileReader();
+    if(isImage){
+      reader.onload = ev=>{
+        pendingAttachments.push({type:'image', name:file.name, dataUrl:ev.target.result, size:file.size});
+        renderPendingAttachments();
+      };
+      reader.readAsDataURL(file);
+    } else if(isText){
+      reader.onload = ev=>{
+        let txt = ev.target.result;
+        if(txt.length > 50000) txt = txt.slice(0,50000) + '\n... (terpotong)';
+        pendingAttachments.push({type:'file', name:file.name, textContent:txt, size:file.size, isText:true, mime:file.type});
+        renderPendingAttachments();
+      };
+      reader.readAsText(file);
+    } else {
+      pendingAttachments.push({type:'file', name:file.name, textContent:null, size:file.size, isText:false, mime:file.type});
+      renderPendingAttachments();
+      showToast('⚠️ File biner tidak bisa dibaca isinya');
+    }
+  });
+  e.target.value = '';
+}
+function renderPendingAttachments(){
+  const c = document.getElementById('pendingAttachments');
+  if(pendingAttachments.length===0){ c.classList.remove('show'); c.innerHTML=''; return; }
+  c.classList.add('show');
+  c.innerHTML = pendingAttachments.map((att,i)=>{
+    if(att.type==='image'){
+      return `<div class="pending-chip"><img src="${att.dataUrl}" alt=""><span class="chip-name">${escapeHtml(att.name)}</span><button class="remove-btn" onclick="removeAttachment(${i})">×</button></div>`;
+    }
+    return `<div class="pending-chip"><span class="file-icon">📄</span><span class="chip-name">${escapeHtml(att.name)}</span><button class="remove-btn" onclick="removeAttachment(${i})">×</button></div>`;
+  }).join('');
+}
+function removeAttachment(i){
+  pendingAttachments.splice(i,1);
+  renderPendingAttachments();
+}
+
+// ====== CHAT ======
+function addUserMessage(text, attachments){
+  const el = document.createElement('div');
+  el.className = 'msg user';
+  let attHtml = '';
+  if(attachments && attachments.length>0){
+    attHtml = '<div class="msg-attachments">';
+    attachments.forEach(att=>{
+      if(att.type==='image'){
+        attHtml += `<img class="msg-img" src="${att.dataUrl}" onclick="openLightbox(this.src)" alt="">`;
+      } else {
+        attHtml += `<div class="msg-file"><span class="file-icon">📄</span><span class="file-name">${escapeHtml(att.name)}</span></div>`;
+      }
+    });
+    attHtml += '</div>';
+  }
+  el.innerHTML = `<div class="msg-avatar">${currentUser.username[0].toUpperCase()}</div><div class="msg-bubble">${attHtml}${text?escapeHtml(text):''}</div>`;
+  document.getElementById('chatMessages').appendChild(el);
+  scrollChat();
+}
+function addAIMessage(text){
+  const el = document.createElement('div');
+  el.className = 'msg ai';
+  el.innerHTML = '<div class="msg-avatar">H</div><div class="msg-bubble">'+renderMarkdown(text)+'</div>';
+  document.getElementById('chatMessages').appendChild(el);
+  scrollChat();
+}
+function addTyping(){
+  const el = document.createElement('div');
+  el.className='msg ai'; el.id='typingIndicator';
+  el.innerHTML='<div class="msg-avatar">H</div><div class="msg-bubble"><span class="typing"><span></span><span></span><span></span></span></div>';
+  document.getElementById('chatMessages').appendChild(el); scrollChat();
+}
+function removeTyping(){ const el=document.getElementById('typingIndicator'); if(el) el.remove(); }
+function scrollChat(){ const el=document.getElementById('chatMessages'); setTimeout(()=>el.scrollTop=el.scrollHeight,50); }
+function autoGrow(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,120)+'px'; }
+
+// COPY CODE (event delegation)
+document.getElementById('chatMessages').addEventListener('click', e=>{
+  if(e.target.classList.contains('copy-btn')){
+    const wrapper = e.target.closest('.code-block-wrapper');
+    const codeEl = wrapper.querySelector('pre code');
+    const code = codeEl.textContent;
+    navigator.clipboard.writeText(code).then(()=>{
+      e.target.textContent = '✓ Tersalin';
+      e.target.classList.add('copied');
+      setTimeout(()=>{ e.target.textContent = '📋 Salin'; e.target.classList.remove('copied'); }, 1600);
+    }).catch(()=>{
+      const ta = document.createElement('textarea');
+      ta.value = code; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+      e.target.textContent = '✓ Tersalin';
+      setTimeout(()=>{ e.target.textContent = '📋 Salin'; }, 1600);
+    });
+  }
+});
+
+function canUseToken(){
+  if(!currentUser) return false;
+  if(currentUser.role==='developer') return true;
+  const rec = ensureUserRecord(currentUser.username);
+  if(!rec) return false;
+  return rec.tokensUsed < ROLE_LIMITS[currentUser.role];
+}
+function consumeToken(){
+  if(!currentUser || currentUser.role==='developer') return;
+  const users = getUsers();
+  const u = users[currentUser.username]; if(!u) return;
+  if(u.lastReset !== todayKey()){ u.tokensUsed=0; u.lastReset=todayKey(); }
+  u.tokensUsed+=1; users[currentUser.username]=u; saveUsers(users); refreshUI();
+}
+
+async function sendChat(){
+  if(isSending) return;
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text && pendingAttachments.length===0) return;
+  if(!canUseToken()){ showToast('❌ Kuota token habis! Coba besok atau minta upgrade VIP.'); return; }
+  isSending = true;
+  document.getElementById('sendBtn').disabled = true;
+  const attachments = pendingAttachments.slice();
+  pendingAttachments = []; renderPendingAttachments();
+  input.value=''; input.style.height='44px';
+
+  addUserMessage(text, attachments);
+
+  // Build text content that AI understands
+  let displayText = text;
+  const imageAtts = attachments.filter(a=>a.type==='image');
+  const fileAtts = attachments.filter(a=>a.type==='file');
+  let fileContext = '';
+  fileAtts.forEach(f=>{
+    if(f.isText && f.textContent){
+      fileContext += `\n\n--- FILE: ${f.name} ---\n\`\`\`\n${f.textContent}\n\`\`\`\n`;
+    } else {
+      fileContext += `\n\n[User melampirkan file biner: ${f.name}, ${formatSize(f.size)}]`;
+    }
+  });
+
+  let historyContent = displayText || (imageAtts.length ? '[User mengirim gambar]' : '[User mengirim file]');
+  if(fileAtts.length) historyContent += fileContext;
+  chatHistory.push({role:'user', content: historyContent, hasImage: imageAtts.length>0});
+
+  addTyping();
+  try {
+    const reply = await callHIKKAI(chatHistory, displayText, imageAtts, fileContext);
+    removeTyping();
+    addAIMessage(reply);
+    chatHistory.push({role:'assistant', content:reply});
+    consumeToken();
+  } catch(err){
+    removeTyping();
+    addAIMessage('⚠️ Maaf, terjadi error: '+(err.message||'unknown')+'\n\nCoba lagi ya.');
+  } finally {
+    isSending=false;
+    document.getElementById('sendBtn').disabled=false;
+  }
+}
+
+// ====== AI CONFIG ======
+const CLAUDE_DEFAULT_MODEL = 'claude-sonnet-5-5';
+const PROXY_URL = '/.netlify/functions/claude';
+let lastProvider = '-';
+let proxyDead = false;
+function getAICfg(){
+  const d = {mode:'auto', apiKey:'', model:CLAUDE_DEFAULT_MODEL};
+  try{ return Object.assign(d, JSON.parse(localStorage.getItem('hikk_ai_cfg')||'{}')); }catch(e){ return d; }
+}
+function loadAICfgFields(){
+  const c = getAICfg();
+  document.getElementById('cfgMode').value = c.mode;
+  document.getElementById('cfgKey').value = c.apiKey;
+  document.getElementById('cfgModel').value = c.model;
+  document.getElementById('cfgStatus').textContent = lastProvider;
+  refreshServerStatus();
+}
+async function serverCall(body){
+  const r = await timedFetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)}, 20000);
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok){
+    const e = data && data.error;
+    throw new Error(e && e.message ? e.message : (typeof e==='string' ? e : 'HTTP '+r.status));
+  }
+  return data;
+}
+async function refreshServerStatus(){
+  const el = document.getElementById('cfgServer'); if(!el) return;
+  try{ const d = await serverCall({action:'status'}); el.textContent = d.hasKey ? '✅ Terpasang' : '❌ Belum ada'; }
+  catch(e){ el.textContent = '⚠️ Server belum dipasang'; }
+}
+async function saveAICfg(){
+  const c = {
+    mode: document.getElementById('cfgMode').value,
+    apiKey: document.getElementById('cfgKey').value.trim(),
+    model: document.getElementById('cfgModel').value.trim() || CLAUDE_DEFAULT_MODEL
+  };
+  const adminPass = document.getElementById('cfgAdminPass').value;
+  localStorage.setItem('hikk_ai_cfg', JSON.stringify(c));
+  proxyDead = false;
+  if(!adminPass){
+    showToast('✅ Disimpan di browser ini saja. Isi password admin agar dipakai semua pengguna.');
+    return;
+  }
+  try{
+    const d = await serverCall({action:'setConfig', adminPass, apiKey:c.apiKey, model:c.model});
+    c.apiKey = '';
+    localStorage.setItem('hikk_ai_cfg', JSON.stringify(c));
+    document.getElementById('cfgKey').value = '';
+    showToast(d.hasKey ? '✅ Tersimpan di server, dipakai semua pengguna' : '⚠️ Model tersimpan, tapi API key server belum ada');
+  }catch(e){ showToast('❌ '+String(e.message).slice(0,120)); }
+  refreshServerStatus();
+}
+async function testAI(){
+  showToast('⏳ Menguji koneksi...');
+  try{
+    const t = await callHIKKAI([], 'Balas dengan satu kata saja: OK', [], '');
+    showToast('✅ '+lastProvider+': '+String(t).slice(0,40));
+  }catch(e){ showToast('❌ '+String(e.message).slice(0,140)); }
+}
+
+// ====== AI HELPERS ======
+async function timedFetch(url, opts, ms){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), ms||60000);
+  try{ return await fetch(url, Object.assign({signal:ctrl.signal}, opts)); }
+  finally{ clearTimeout(t); }
+}
+const CLAUDE_IMG_TYPES = ['image/jpeg','image/png','image/gif','image/webp'];
+// Ubah format OpenAI -> format Anthropic (urutan user/assistant harus bergantian & mulai dari user)
+function toClaudeMessages(messages){
+  const out = [];
+  for(const m of messages){
+    let content;
+    if(typeof m.content === 'string'){ content = m.content || '(kosong)'; }
+    else{
+      content = m.content.map(p=>{
+        if(p.type==='text') return {type:'text', text:p.text || '(kosong)'};
+        if(p.type==='image_url'){
+          const mm = /^data:(.+?);base64,(.*)$/.exec(p.image_url.url);
+          if(mm && CLAUDE_IMG_TYPES.includes(mm[1])) return {type:'image', source:{type:'base64', media_type:mm[1], data:mm[2]}};
+        }
+        return null;
+      }).filter(Boolean);
+      if(!content.length) content = '[gambar tidak didukung]';
+    }
+    const last = out[out.length-1];
+    if(last && last.role === m.role){
+      const a = typeof last.content==='string' ? [{type:'text', text:last.content}] : last.content;
+      const b = typeof content==='string' ? [{type:'text', text:content}] : content;
+      last.content = a.concat(b);
+    } else out.push({role:m.role, content});
+  }
+  while(out.length && out[0].role !== 'user') out.shift();
+  return out;
+}
+function claudeText(data){
+  if(data && Array.isArray(data.content)) return data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+  return '';
+}
+// 1) Lewat server proxy (Netlify Function) - API key aman di server
+async function viaProxy(system, msgs){
+  let r;
+  try{
+    r = await timedFetch(PROXY_URL, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({system, messages:msgs, max_tokens:2048})}, 55000);
+  }catch(e){ if(e instanceof TypeError) proxyDead = true; throw new Error('Proxy tidak terjangkau'); }
+  if(r.status===404 || r.status===405){ proxyDead = true; throw new Error('Proxy belum dipasang'); }
+  const data = await r.json().catch(()=>null);
+  if(!r.ok || !data) throw new Error('Proxy '+r.status+((data&&data.error&&data.error.message)?': '+data.error.message:(data&&typeof data.error==='string'?': '+data.error:'')));
+  const txt = claudeText(data);
+  if(!txt) throw new Error('Proxy: balasan kosong');
+  return txt;
+}
+// 2) Langsung ke Anthropic dengan API key (disimpan di browser developer)
+async function viaClaudeKey(cfg, system, msgs){
+  const r = await timedFetch('https://api.anthropic.com/v1/messages', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','x-api-key':cfg.apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+    body:JSON.stringify({model:cfg.model||CLAUDE_DEFAULT_MODEL, max_tokens:2048, system, messages:msgs})
+  }, 60000);
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error('Claude '+r.status+': '+((data.error&&data.error.message)||'gagal'));
+  const txt = claudeText(data);
+  if(!txt) throw new Error('Claude: balasan kosong');
+  return txt;
+}
+// 3) Cadangan gratis (Pollinations), dicoba beberapa model
+async function viaFree(system, chat){
+  const full = [{role:'system', content:system}, ...chat];
+  const textOnly = full.map(m=>({role:m.role, content: typeof m.content==='string' ? m.content : ((m.content.find(p=>p.type==='text')||{}).text || '[gambar]')}));
+  const tries = [['openai', full], ['openai-large', textOnly], ['mistral', textOnly], ['llama', textOnly]];
+  let lastErr = 'tidak ada respons';
+  for(const [model, msgs] of tries){
+    try{
+      const r = await timedFetch('https://text.pollinations.ai/openai', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({model, messages:msgs, referrer:'hikk-ai-app'})}, 40000);
+      if(r.ok){
+        const d = await r.json();
+        const t = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
+        if(t) return t;
+        lastErr = 'balasan kosong';
+      } else lastErr = 'HTTP '+r.status;
+    }catch(e){ lastErr = e.name==='AbortError' ? 'timeout' : e.message; }
+  }
+  // GET singkat (URL panjang bikin error, jadi dipotong)
+  try{
+    const flat = (system+'\n\n'+textOnly.slice(1).map(m=>m.role+': '+m.content).join('\n\n')).slice(-1800);
+    const r2 = await timedFetch('https://text.pollinations.ai/'+encodeURIComponent(flat)+'?model=openai&referrer=hikk-ai-app', {}, 40000);
+    if(r2.ok){ const t = await r2.text(); if(t) return t; }
+    lastErr = 'HTTP '+r2.status;
+  }catch(e){ lastErr = e.name==='AbortError' ? 'timeout' : e.message; }
+  throw new Error('server gratis sibuk ('+lastErr+')');
+}
+
+// ====== AI CALL ======
+async function callHIKKAI(history, userText, images, fileContext){
+  const systemPrompt = "Kamu adalah HIKK AI, asisten AI cerdas berbahasa Indonesia buatan Hikmal. Kamu ahli coding (semua bahasa), menjawab pertanyaan, menganalisis gambar & file kode, dan membantu pekerjaan kreatif. Jawab dengan jelas dan ramah. WAJIB: semua kode dalam blok markdown dengan ```bahasa di awal. Jika ditanya siapa kamu, jawab: \"Aku HIKK AI, asisten AI buatan Hikmal.\"";
+
+  let userMsg;
+  if(images.length > 0){
+    let txt = userText || '';
+    if(fileContext) txt += fileContext;
+    if(!txt) txt = 'Tolong analisis gambar ini.';
+    const parts = [{type:'text', text: txt}];
+    images.forEach(img=>parts.push({type:'image_url', image_url:{url: img.dataUrl}}));
+    userMsg = {role:'user', content: parts};
+  } else {
+    let txt = userText || '';
+    if(fileContext) txt += fileContext;
+    if(!txt) txt = '(pesan kosong)';
+    userMsg = {role:'user', content: txt};
+  }
+
+  const recentHistory = history.slice(-10, -1).map(m=>({
+    role: m.role,
+    content: typeof m.content === 'string' ? m.content : (m.content.find(p=>p.type==='text')||{}).text || '[gambar]'
+  }));
+  const chat = [...recentHistory, userMsg];
+
+  const cfg = getAICfg();
+  const errs = [];
+  const done = (txt, name)=>{
+    lastProvider = name;
+    const el = document.getElementById('cfgStatus'); if(el) el.textContent = name;
+    return txt;
+  };
+
+  if(cfg.mode !== 'free'){
+    const claudeMsgs = toClaudeMessages(chat);
+    if(!proxyDead){
+      try{ return done(await viaProxy(systemPrompt, claudeMsgs), 'Claude (server)'); }
+      catch(e){ errs.push(e.message); }
+    }
+    if(cfg.apiKey){
+      try{ return done(await viaClaudeKey(cfg, systemPrompt, claudeMsgs), 'Claude (API key)'); }
+      catch(e){ errs.push(e.message); }
+    }
+    if(cfg.mode === 'claude'){
+      throw new Error('Koneksi Claude gagal → '+(errs.join(' | ') || 'API key / proxy belum diatur'));
+    }
+  }
+  try{ return done(await viaFree(systemPrompt, chat), 'Gratis (Pollinations)'); }
+  catch(e){ errs.push(e.message); }
+  throw new Error('Semua koneksi AI gagal → '+errs.join(' | '));
+}
+
+// ====== IMAGE GEN ======
+async function generateImage(){
+  if(!canUseToken()){ showToast('❌ Kuota token habis!'); return; }
+  const prompt = document.getElementById('imagePrompt').value.trim();
+  if(!prompt) return showToast('Tulis prompt dulu!');
+  const btn = document.getElementById('genImgBtn');
+  btn.disabled=true; btn.textContent='⏳ Membuat...';
+  const gallery = document.getElementById('gallery');
+  const item = document.createElement('div');
+  item.className='gallery-item';
+  item.innerHTML='<div class="loading-spinner"></div>';
+  gallery.prepend(item);
+  const seed = Math.floor(Math.random()*1000000);
+  const url = 'https://image.pollinations.ai/prompt/'+encodeURIComponent(prompt)+'?width=768&height=768&seed='+seed+'&nologo=true&referrer=hikk-ai-app';
+  try{
+    await new Promise((resolve, reject)=>{
+      const img = new Image();
+      img.onload = ()=>{ item.innerHTML=''; item.appendChild(img); item.onclick=()=>openLightbox(url); resolve(); };
+      img.onerror = ()=>reject(new Error('Gagal generate'));
+      img.src = url; img.alt = prompt;
+    });
+    consumeToken();
+    showToast('✅ Gambar berhasil dibuat!');
+  } catch(e){
+    item.innerHTML='<div style="padding:10px;text-align:center;font-size:12px;color:var(--danger)">❌ Gagal<br>Coba lagi</div>';
+  } finally {
+    btn.disabled=false; btn.textContent='✨ Generate Gambar';
+  }
+}
+
+// ====== UTILS ======
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])) }
+function formatSize(b){ if(b<1024) return b+' B'; if(b<1048576) return (b/1024).toFixed(1)+' KB'; return (b/1048576).toFixed(1)+' MB'; }
+
+function renderMarkdown(text){
+  if(!text) return '';
+  let html = escapeHtml(text);
+  const codeBlocks = [];
+  html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (m,lang,code)=>{
+    const idx = codeBlocks.length;
+    const langLabel = lang || 'code';
+    codeBlocks.push(
+      '<div class="code-block-wrapper">'+
+        '<div class="code-block-header"><span>'+langLabel+'</span><button class="copy-btn" type="button">📋 Salin</button></div>'+
+        '<pre><code>'+code.trim()+'</code></pre>'+
+      '</div>'
+    );
+    return '___CB'+idx+'___';
+  });
+  html = html.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  html = html.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, '$1<em>$2</em>');
+  html = html.replace(/^### (.+)$/gm, '<strong style="font-size:1.05em">$1</strong>');
+  html = html.replace(/^## (.+)$/gm, '<strong style="font-size:1.1em">$1</strong>');
+  html = html.replace(/\n/g, '<br>');
+  html = html.replace(/___CB(\d+)___/g, (m,idx)=>codeBlocks[parseInt(idx)]);
+  return html;
+}
+
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2500);
+}
+function clearChat(){
+  if(!confirm('Hapus semua riwayat chat?')) return;
+  chatHistory = [];
+  document.getElementById('chatMessages').innerHTML = '';
+  addAIMessage("Chat dibersihkan. Ada yang bisa aku bantu? 🚀");
+}
+function openLightbox(src){
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox(){ document.getElementById('lightbox').classList.remove('show'); }
+
+// ====== EVENTS ======
+document.getElementById('chatInput').addEventListener('keydown', e=>{
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendChat(); }
+});
+
+// ====== INIT ======
+(function init(){
+  const sess = localStorage.getItem('hikk_session');
+  if(sess){
+    try{
+      const u = JSON.parse(sess);
+      if(u.role!=='developer'){
+        const users = getUsers();
+        if(!users[u.username]){ localStorage.removeItem('hikk_session'); return; }
+      }
+      currentUser = u; startApp();
+    }catch(e){ localStorage.removeItem('hikk_session'); }
+  }
+})();
+</script>
+</body>
+</html>
